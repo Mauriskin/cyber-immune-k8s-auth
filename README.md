@@ -79,14 +79,29 @@ curl -X POST http://$INGRESS_IP:$INGRESS_PORT/login \
 3. Пограничные (rate limiting, истечение токена).
 
 Структура репозитория
-
-- base/ — Auth Service и Token Enforcer (Go-код и Dockerfiles).
-- reference-monitor/ — Rust Reference Monitor (TCB).
-- security-controller/ — OPA + Rego-политики.
-- manifests/ — Kubernetes манифесты (deployments, NetworkPolicy, Ingress).
-- policy/ — YAML-политики и генераторы.
-- tests/ — k6 тесты.
-- start-config.sh — Автоматизация установки.
+```text
+cyber-immune-auth/
+├── base/                          # Основные сервисы на Go
+│   ├── auth-service/              # Auth Service: код, Dockerfile, deployment, ingress
+│   └── token_enforcer/            # Token Enforcer (прокси к TCB): код, Dockerfile, deployment, service
+├── reference-monitor/             # Минимальный TCB (Reference Monitor на Rust)
+│   └── refmon/                    # Код, protobuf, Dockerfile, deployment, networkpolicy
+├── security-controller/           # OPA Security Controller (политики и код, если есть)
+├── policy/                        # YAML-политики безопасности
+│   ├── data_access-control.yaml
+│   ├── inter_domain_interactions.yaml
+│   ├── network_security.yaml
+│   └── security-policies-configmap.yaml
+├── gatekeeper-generated/          # Генерируемые Gatekeeper constraints и шаблоны
+├── tests/                         # Автоматизированные тесты k6
+│   ├── positive.js
+│   ├── negative.js
+│   └── edge.js
+├── start-config.sh                # Скрипт автоматизированной установки и развёртывания
+├── domains.yaml                   # Описание namespaces с PodSecurity
+├── network-policies.yaml          # Cilium NetworkPolicy для изоляции доменов
+├── falco-values.yaml              # Конфигурация Falco
+└── README.md
 
 Лицензия
 MIT License — свободное использование и модификация.
