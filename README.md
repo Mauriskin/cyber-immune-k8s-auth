@@ -34,7 +34,7 @@ cd cyber-immune-auth
 # 2. Запуск скрипта
 chmod +x start-config.sh
 ./start-config.sh
-
+```bash
 Скрипт выполнит:
 
 Сборку образов (Reference Monitor, Token Enforcer, Auth Service).
