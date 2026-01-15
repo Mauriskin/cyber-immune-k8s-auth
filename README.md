@@ -14,7 +14,21 @@
 - **Защита от угроз**: lateral movement, container escape, tampering, DoS.
 - **Мониторинг**: Falco + Prometheus + Loki + Grafana.
 
-## Quick Start (Быстрая установка)
+
+## Архитектура
+
+Внешний клиент
+↓ (HTTPS)
+NGINX Ingress (Домен 1 — Untrusted)
+↓
+Auth Service (Домен 2 — Medium): проверка credentials + rate limiting
+↓ (HTTP/JSON)
+Token Enforcer (Домен 3 — High): прокси + OPA (Security Controller)
+↓ (gRPC + Protobuf)
+Reference Monitor (Rust TCB): только криптография JWT (HS256, TTL=60s)
+
+
+## Быстрая установка
 
 Проект протестирован на Ubuntu 22.04/24.04 с Minikube на kvm2.
 
@@ -34,7 +48,7 @@ cd cyber-immune-auth
 # 2. Запуск скрипта
 chmod +x start-config.sh
 ./start-config.sh
-```bash
+```
 Скрипт выполнит:
 
 Сборку образов (Reference Monitor, Token Enforcer, Auth Service).
@@ -45,40 +59,28 @@ chmod +x start-config.sh
 Развёртывание всех компонентов, NetworkPolicy и Ingress.
 Ожидание готовности подов.
 
-Ручная установка (если нужно)
-
-# Запуск Minikube
-minikube start --driver=kvm2 --cpus=6 --memory=16384mb --container-runtime=containerd
-minikube addons enable gvisor
-
-# Сборка и загрузка образов
-eval $(minikube docker-env)
-docker build -t secure-refmon:latest ./reference-monitor/refmon
-docker build -t token-enforcer:latest ./base/token_enforcer
-docker build -t secure-auth-service:latest ./base/auth-service
-minikube image load secure-refmon:latest token-enforcer:latest secure-auth-service:latest
-
-# Установка компонентов
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo add gatekeeper https://open-policy-agent.github.io/gatekeeper/charts
-helm repo update
-
-helm upgrade --install nginx-ingress ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace
-helm upgrade --install gatekeeper gatekeeper/gatekeeper --namespace gatekeeper-system --create-namespace
-
-# Развёртывание
-kubectl apply -f manifests/
-
 Доступ к API
-
+```bash
 minikube tunnel  # в отдельном терминале
 INGRESS_IP=$(minikube ip)
 INGRESS_PORT=$(kubectl -n ingress-nginx get svc nginx-ingress-controller -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')
 echo "API URL: http://$INGRESS_IP:$INGRESS_PORT/login"
-
+```
+Тест
+```bash
 curl -X POST http://$INGRESS_IP:$INGRESS_PORT/login \
   -d '{"username":"admin","password":"secret123","mfa":"123456"}' \
   -H "Content-Type: application/json"
+```
+Автоматизированные тесты k6 в директории tests/:
+```bash
+./run-tests.sh
+```
+Тесты покрывают:
+
+Позитивные сценарии (успешная аутентификация).
+Негативные (неверные данные, прямой доступ к TCB).
+Пограничные (rate limiting, истечение токена).
 
 cyber-immune-auth/
 ├── base/                      # Auth Service и Token Enforcer
@@ -90,4 +92,4 @@ cyber-immune-auth/
 └── README.md
 
 Лицензия
-MIT License
+MIT License — свободное использование и модификация.
