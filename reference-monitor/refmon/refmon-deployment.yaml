@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reference-monitor
+  namespace: domain3-tcb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reference-monitor
+  template:
+    metadata:
+      labels:
+        app: reference-monitor
+        tcb-component: "true"
+    spec:
+      runtimeClassName: gvisor
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: refmon
+        image: secure-refmon:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 50051
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: refmon-svc
+  namespace: domain3-tcb
+spec:
+  selector:
+    app: reference-monitor
+  ports:
+  - port: 50051
+    targetPort: 50051
