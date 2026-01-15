@@ -1,0 +1,17 @@
+cyber_immune_auth_policy:
+  version: "1.0"
+  network_security:
+    default_policy: "deny_all"
+    allowed_network_flows:
+      - from: "domain1_external_interface"
+        to: "domain2_authentication"
+        protocol: "http"
+        port: 8080
+      - from: "domain2_authentication"
+        to: "domain3_token_policy"
+        protocol: "http"
+        port: 8080
+      - from: "domain3_token_policy"
+        to: "domain3_token_policy"  # enforcer → refmon
+        protocol: "grpc"
+        port: 50051

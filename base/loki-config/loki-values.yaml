@@ -1,0 +1,51 @@
+deploymentMode: SingleBinary  # Монолитный режим
+
+loki:
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: filesystem
+  schemaConfig:
+    configs:
+    - from: "2024-01-01"
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: loki_index_
+        period: 24h
+  auth_enabled: false
+  limits_config:
+    retention_period: 168h
+
+singleBinary:
+  replicas: 1
+  persistence:
+    enabled: true
+    size: 5Gi
+
+# Отключаем все scalable компоненты
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
+
+# Отключаем cache (ключевой момент!)
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false
+memcachedChunks:
+  enabled: false
+memcachedIndexQueries:
+  enabled: false
+memcachedMetadata:
+  enabled: false
+
+gateway:
+  enabled: true
+
+service:
+  type: NodePort

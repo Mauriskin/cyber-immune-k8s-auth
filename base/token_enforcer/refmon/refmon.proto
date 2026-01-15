@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option go_package = "token-enforcer/refmon";
+
+package refmon;
+
+service ReferenceMonitor {
+  rpc Issue(IssueRequest) returns (IssueResponse);
+  rpc Validate(ValidateRequest) returns (ValidateResponse);
+}
+
+message IssueRequest {
+  string subject = 1;      // user_id
+  int64 ttl_seconds = 2;   // время жизни токена
+}
+
+message IssueResponse {
+  bytes token = 1;
+}
+
+message ValidateRequest {
+  bytes token = 1;
+}
+
+message ValidateResponse {
+  bool valid = 1;
+  string error = 2;
+}

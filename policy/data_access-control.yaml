@@ -1,0 +1,8 @@
+cyber_immune_auth_policy:
+  version: "1.0"
+  data_access_controls:
+    secrets_data:
+      confidentiality_level: "high"
+      allowed_access:
+        - from: "domain3_token_policy"
+          actions: ["read"]  # Только TCB читает секреты

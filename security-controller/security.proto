@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package security;
+
+option go_package = "./security";
+
+service SecurityController {
+  rpc CheckInteraction(CheckRequest) returns (CheckResponse);
+}
+
+message CheckRequest {
+  string source_domain = 1;
+  string target_domain = 2;
+  string action = 3;
+}
+
+message CheckResponse {
+  bool allowed = 1;
+  string reason = 2;
+}

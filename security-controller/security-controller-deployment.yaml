@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: security-controller
+  namespace: domain3-tcb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: security-controller
+  template:
+    metadata:
+      labels:
+        app: security-controller
+        tcb-component: "true"
+    spec:
+      runtimeClassName: gvisor
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+      - name: policies
+        configMap:
+          name: security-policies
+      containers:
+      - name: controller
+        image: secure-security-controller:latest
+        imagePullPolicy: IfNotPresent  # Важно: локальный образ
+        ports:
+        - containerPort: 50052
+        volumeMounts:
+        - name: policies
+          mountPath: /policies
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: security-controller-svc
+  namespace: domain3-tcb
+spec:
+  selector:
+    app: security-controller
+  ports:
+  - port: 50052
+    targetPort: 50052

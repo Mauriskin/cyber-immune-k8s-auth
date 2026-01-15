@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: token-enforcer
+  namespace: domain3-tcb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: token-enforcer
+  template:
+    metadata:
+      labels:
+        app: token-enforcer
+        role: enforcer
+    spec:
+      runtimeClassName: gvisor
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: enforcer
+        image: token-enforcer:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: token-enforcer-svc
+  namespace: domain3-tcb
+spec:
+  selector:
+    app: token-enforcer
+  ports:
+  - port: 8080
+    targetPort: 8080

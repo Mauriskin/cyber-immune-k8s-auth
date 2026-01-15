@@ -1,0 +1,35 @@
+falco:
+  jsonOutput: true
+  jsonIncludeOutputProperty: true
+  jsonIncludeTagsProperty: true
+
+webserver:
+  enabled: true
+  prometheus:
+    enabled: true
+
+driver:
+  kind: ebpf  # или kmod, если ebpf не работает
+
+customRules:
+  custom-rules.yaml: |-
+    - rule: Shell spawned in container
+      desc: Detect shell spawn in container
+      condition: spawned_process and container and proc.name in (sh, bash, zsh, ash)
+      output: "Shell spawned in container (pod=%k8s.pod.name ns=%k8s.ns.name container=%container.id user=%user.name command=%proc.cmdline)"
+      priority: WARNING
+      tags: [container, shell]
+
+    - rule: Read sensitive file
+      desc: Detect read of /etc/shadow or passwd
+      condition: open_read and fd.name in (/etc/shadow, /etc/passwd) and container
+      output: "Sensitive file read (file=%fd.name pod=%k8s.pod.name ns=%k8s.ns.name container=%container.id user=%user.name)"
+      priority: NOTICE
+      tags: [filesystem]
+
+    - rule: Outbound connection from container
+      desc: Detect unexpected outbound network connection from container
+      condition: outbound and container and not fd.rport in (80, 443)
+      output: "Outbound connection from container (pod=%k8s.pod.name ns=%k8s.ns.name container=%container.id dest=%fd.rip:%fd.rport command=%proc.cmdline user=%user.name)"
+      priority: NOTICE
+      tags: [network, container]

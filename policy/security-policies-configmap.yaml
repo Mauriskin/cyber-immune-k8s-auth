@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-policies
+  namespace: domain3-tcb
+  labels:
+    app: security-controller
+    purpose: policy-source-of-truth
+data:
+  inter_domain_interactions.yaml: |
+    cyber_immune_auth_policy:
+      version: "1.0"
+      system_id: "CYBER-IMMUNE-AUTH-001"
+      security_domains:
+        domain1_external_interface:
+          trust_level: "low"
+          allowed_interactions:
+            - to: "domain2_authentication"
+              actions: ["send_auth_request"]
+              protocol: "http"
+              port: 8080
+              encryption: "tls_optional"
+        domain2_authentication:
+          trust_level: "medium"
+          allowed_interactions:
+            - to: "domain3_token_policy"
+              actions: ["issue_token", "validate_token"]
+              protocol: "http"
+              port: 8080
+              encryption: "none"
+            - to: "domain3_token_policy"
+              actions: ["grpc_call"]
+              protocol: "grpc"
+              port: 50051
+        domain3_token_policy:
+          trust_level: "high"
+          allowed_interactions: []
+  network_security.yaml: |
+    cyber_immune_auth_policy:
+      version: "1.0"
+      network_security:
+        default_policy: "deny_all"
+        allowed_network_flows:
+          - from: "domain1_external_interface"
+            to: "domain2_authentication"
+            protocol: "http"
+            port: 8080
+          - from: "domain2_authentication"
+            to: "domain3_token_policy"
+            protocol: "http"
+            port: 8080
+          - from: "domain3_token_policy"
+            to: "domain3_token_policy"
+            protocol: "grpc"
+            port: 50051
+  data_access_control.yaml: |
+    # Опционально
+    cyber_immune_auth_policy:
+      version: "1.0"
+      data_access_controls:
+        secrets_data:
+          confidentiality_level: "high"
+          allowed_access:
+            - from: "domain3_token_policy"
+              actions: ["read"]

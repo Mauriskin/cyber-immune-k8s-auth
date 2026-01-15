@@ -1,0 +1,12 @@
+data_access_controls:
+  secrets_data:
+    confidentiality_level: "high"
+    allowed_access:
+      - from: "domain3_token_policy"
+        actions: ["read_write"]
+  policies_data:
+    allowed_access:
+      - from: "domain3_token_policy"
+        actions: ["read"]
+      - from: "domain5_monitoring"
+        actions: ["read_audit"]

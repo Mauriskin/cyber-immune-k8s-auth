@@ -1,0 +1,121 @@
+# 1. Default deny ingress во всех доменах
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: domain1-untrusted
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: domain2-medium
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: domain3-tcb
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress: []
+
+# 2. Разрешённый трафик от NGINX Ingress к Auth Service
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-auth
+  namespace: domain2-medium
+spec:
+  podSelector:
+    matchLabels:
+      app: auth-service
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+
+# 3. Разрешённый трафик от Auth Service к Token Enforcer
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-auth-to-enforcer
+  namespace: domain3-tcb
+spec:
+  podSelector:
+    matchLabels:
+      app: token-enforcer
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: domain2-medium
+    ports:
+    - protocol: TCP
+      port: 8080
+
+# 4. gRPC от Token Enforcer к Reference Monitor
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-enforcer-to-refmon
+  namespace: domain3-tcb
+spec:
+  podSelector:
+    matchLabels:
+      app: reference-monitor
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: token-enforcer
+    ports:
+    - protocol: TCP
+      port: 50051
+
+# 5. Разрешённый трафик от Ingress к Token Enforcer (для /validate)
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-enforcer
+  namespace: domain3-tcb
+spec:
+  podSelector:
+    matchLabels:
+      app: token-enforcer
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080

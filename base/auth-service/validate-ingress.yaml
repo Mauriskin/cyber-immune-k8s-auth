@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: login-ingress
+  namespace: domain2-medium
+  annotations:
+    nginx.ingress.kubernetes.io/limit-rps: "5"
+    nginx.ingress.kubernetes.io/limit-burst: "10"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2   # Ключ: $2 захватывает часть после /login(/|$)
+    nginx.ingress.kubernetes.io/use-regex: "true"     # Обязательно для regex
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /login(/|$)(.*)   # Regex матчит /login, /login/ и /login/anything
+        pathType: ImplementationSpecific   # Обязательно для regex в новых версиях
+        backend:
+          service:
+            name: auth-service-svc
+            port:
+              number: 8080

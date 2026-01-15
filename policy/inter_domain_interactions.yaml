@@ -1,0 +1,24 @@
+cyber_immune_auth_policy:
+  version: "1.0"
+  system_id: "AUTH-SYSTEM-001"
+  
+  security_domains:
+    domain1_external_interface:
+      trust_level: "low"
+      allowed_interactions:
+        - to: "domain2_authentication"
+          actions: ["send_auth_request"]
+          protocol: "https"
+          port: 8080
+          
+    domain2_authentication:
+      trust_level: "medium"
+      allowed_interactions:
+        - to: "domain3_token_policy"
+          actions: ["issue_token", "validate_token"]
+          protocol: "http"
+          port: 8080
+          
+    domain3_token_policy:
+      trust_level: "high"
+      allowed_interactions: []  # Нет исходящих
