@@ -7,25 +7,21 @@
 Даже при компрометации низкодоверенных компонентов (Ingress или Auth Service) критические активы (секрет подписи JWT) остаются защищёнными, а система сохраняет работоспособность.
 
 Ключевые особенности:
-- **Минимальная TCB** — Reference Monitor на Rust (<250 строк, scratch-образ ~6 MB).
-- **Reference Monitor** — единственный компонент с доступом к секрету JWT (gRPC, без HTTP/JSON).
-- **Security Controller** — OPA с Rego-политиками (default deny + explicit allow).
-- **Трёхуровневая изоляция** (Untrusted → Medium → High) с Cilium, gVisor и restricted PSA.
-- **Защита от угроз**: lateral movement, container escape, tampering, DoS.
-- **Мониторинг**: Falco + Prometheus + Loki + Grafana.
+- **Минимальная TCB**: Reference Monitor на Rust — единственный компонент с доступом к секрету подписи JWT (scratch-образ, без shell).
+- **Строгая изоляция**: 3 домена (Untrusted → Medium → High) с Cilium NetworkPolicy (default deny) и gVisor sandbox.
+- **Референсный монитор политик**: OPA с Rego (2 файла политик) — проверяет каждое взаимодействие перед доступом к TCB.
+- **Защита от угроз**:
+  - Lateral movement: блокируется NetworkPolicy и OPA.
+  - Container escape/tampering: gVisor + restricted PSA + non-root.
+  - DoS: multi-level rate limiting (Ingress + приложение).
+  - Подделка JWT: короткий TTL (60с) + секрет только в TCB.
+- **Непрерывная верификация**: Falco (runtime detection) + Prometheus/Loki/Grafana (логи и метрики).
 
 
 ## Архитектура
 
-Внешний клиент
-↓ (HTTPS)
-NGINX Ingress (Домен 1 — Untrusted)
-↓
-Auth Service (Домен 2 — Medium): проверка credentials + rate limiting
-↓ (HTTP/JSON)
-Token Enforcer (Домен 3 — High): прокси + OPA (Security Controller)
-↓ (gRPC + Protobuf)
-Reference Monitor (Rust TCB): только криптография JWT (HS256, TTL=60s)
+<img width="1113" height="391" alt="image" src="https://github.com/user-attachments/assets/7d1bf6ca-ba42-477b-bee4-896749ec26f8" />
+
 
 
 ## Быстрая установка
@@ -51,13 +47,13 @@ chmod +x start-config.sh
 ```
 Скрипт выполнит:
 
-Сборку образов (Reference Monitor, Token Enforcer, Auth Service).
-Загрузку образов в Minikube.
-Установку NGINX Ingress и OPA Gatekeeper.
-Создание namespaces с restricted PSA.
-Применение Gatekeeper-политики gVisor.
-Развёртывание всех компонентов, NetworkPolicy и Ingress.
-Ожидание готовности подов.
+1. Сборку образов (Reference Monitor, Token Enforcer, Auth Service).
+2. Загрузку образов в Minikube.
+3. Установку NGINX Ingress и OPA Gatekeeper.
+4. Создание namespaces с restricted PSA.
+5. Применение Gatekeeper-политики gVisor.
+6. Развёртывание всех компонентов, NetworkPolicy и Ingress.
+7. Ожидание готовности подов.
 
 Доступ к API
 ```bash
@@ -78,18 +74,19 @@ curl -X POST http://$INGRESS_IP:$INGRESS_PORT/login \
 ```
 Тесты покрывают:
 
-Позитивные сценарии (успешная аутентификация).
-Негативные (неверные данные, прямой доступ к TCB).
-Пограничные (rate limiting, истечение токена).
+1. Позитивные сценарии (успешная аутентификация).
+2. Негативные (неверные данные, прямой доступ к TCB).
+3. Пограничные (rate limiting, истечение токена).
 
-cyber-immune-auth/
-├── base/                      # Auth Service и Token Enforcer
-├── reference-monitor/         # Rust TCB (Reference Monitor)
-├── manifests/                 # Kubernetes манифесты
-├── policy/                    # Rego-политики и YAML
-├── tests/                     # k6 тесты
-├── start-config.sh            # Автоматизация установки
-└── README.md
+Структура репозитория
+
+- base/ — Auth Service и Token Enforcer (Go-код и Dockerfiles).
+- reference-monitor/ — Rust Reference Monitor (TCB).
+- security-controller/ — OPA + Rego-политики.
+- manifests/ — Kubernetes манифесты (deployments, NetworkPolicy, Ingress).
+- policy/ — YAML-политики и генераторы.
+- tests/ — k6 тесты.
+- start-config.sh — Автоматизация установки.
 
 Лицензия
 MIT License — свободное использование и модификация.
