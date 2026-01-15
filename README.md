@@ -10,19 +10,19 @@
 - **Минимальная TCB** — Reference Monitor на Rust (<250 строк, scratch-образ ~6 MB).
 - **Reference Monitor** — единственный компонент с доступом к секрету JWT (gRPC, без HTTP/JSON).
 - **Security Controller** — OPA с Rego-политиками (default deny + explicit allow).
-- **Трёхуровневая изоляция** (Untrusted → Medium → High/TCB) с Cilium, gVisor и restricted PSA.
+- **Трёхуровневая изоляция** (Untrusted → Medium → High) с Cilium, gVisor и restricted PSA.
 - **Защита от угроз**: lateral movement, container escape, tampering, DoS.
 - **Мониторинг**: Falco + Prometheus + Loki + Grafana.
 
 ## Quick Start (Быстрая установка)
 
-Проект протестирован на Ubuntu 22.04/24.04 с Minikube (kvm2 driver).
+Проект протестирован на Ubuntu 22.04/24.04 с Minikube на kvm2.
 
 ### Требования
-- CPU: 6+ ядер, RAM: 16 GB
+- CPU: 6+ ядер, RAM: 16 GB (желательно)
 - Docker, Minikube, kubectl, Helm 3
 
-### Автоматизированная установка (рекомендуется)
+### Автоматизированная установка
 
 В репозитории есть скрипт `start-config.sh` для полной установки и развёртывания.
 
