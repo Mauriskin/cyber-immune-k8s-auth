@@ -82,11 +82,11 @@ curl -X POST http://$INGRESS_IP:$INGRESS_PORT/login \
 ```text
 cyber-immune-auth/
 ├── base/                          # Основные сервисы на Go
-│   ├── auth-service/              # Auth Service: код, Dockerfile, deployment, ingress
-│   └── token_enforcer/            # Token Enforcer (прокси к TCB): код, Dockerfile, deployment, service
+│   ├── auth-service/              # Auth Service
+│   └── token_enforcer/            # Token Enforcer (прокси к TCB)
 ├── reference-monitor/             # Минимальный TCB (Reference Monitor на Rust)
 │   └── refmon/                    # Код, protobuf, Dockerfile, deployment, networkpolicy
-├── security-controller/           # OPA Security Controller (политики и код, если есть)
+├── security-controller/           # OPA Security Controller
 ├── policy/                        # YAML-политики безопасности
 │   ├── data_access-control.yaml
 │   ├── inter_domain_interactions.yaml
