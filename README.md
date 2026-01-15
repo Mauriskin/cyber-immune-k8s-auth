@@ -38,7 +38,7 @@
 
 ```bash
 # 1. Клонирование репозитория
-git clone https://github.com/your-username/cyber-immune-auth.git
+git clone https://github.com/Mauriskin/cyber-immune-k8s-auth.git
 cd cyber-immune-auth
 
 # 2. Запуск скрипта
