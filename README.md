@@ -92,7 +92,7 @@ cyber-immune-auth/
 │   ├── inter_domain_interactions.yaml
 │   ├── network_security.yaml
 │   └── security-policies-configmap.yaml
-├── gatekeeper-generated/          # Генерируемые Gatekeeper constraints и шаблоны
+├── gatekeeper-generated/          # Генерируемые Gatekeeper ограничения и шаблоны
 ├── tests/                         # Автоматизированные тесты k6
 │   ├── positive.js
 │   ├── negative.js
@@ -102,6 +102,6 @@ cyber-immune-auth/
 ├── network-policies.yaml          # Cilium NetworkPolicy для изоляции доменов
 ├── falco-values.yaml              # Конфигурация Falco
 └── README.md
-
+```
 Лицензия
 MIT License — свободное использование и модификация.
