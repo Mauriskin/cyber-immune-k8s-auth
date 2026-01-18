@@ -36,7 +36,7 @@ func initClients() {
 	refmonClient = pb_refmon.NewReferenceMonitorClient(connRef)
 	log.Println("Connected to Reference Monitor")
 
-	// Клиент к Security Controller (runtime policy check)
+	// Клиент к Security Controller
 	connSec, err := grpc.Dial(secCtrlAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
@@ -48,7 +48,7 @@ func initClients() {
 	log.Println("Connected to Security Controller")
 }
 
-// Универсальная функция проверки политики
+// Проверка политики
 func checkPolicy(sourceDomain, targetDomain, action string) (bool, string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -121,7 +121,7 @@ func validateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверка политики перед вызовом TCB
+	// Проверка политики перед вызовом reference monitor
 	allowed, reason := checkPolicy("domain3_token_enforcer", "domain3_reference_monitor", "validate_token")
 	if !allowed {
 		http.Error(w, fmt.Sprintf("Policy violation: %s", reason), http.StatusForbidden)
