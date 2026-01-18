@@ -11,10 +11,7 @@ spec:
   - Ingress
   ingress:
   - from:
-    - podSelector: {}  # Разрешить от всех pod'ов в том же namespace (для теста)
-      # Или строже: от конкретного Token Proxy pod'а
-      # matchLabels:
-      #   app: token-proxy
+    - podSelector: {}
     ports:
     - protocol: TCP
       port: 50051
