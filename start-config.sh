@@ -1,9 +1,7 @@
 #!/bin/bash
 set -e  # Остановка при ошибке
 
-echo "=== Восстановление кибериммунной системы ==="
-
-# Путь к проекту (измените, если другой)
+# Путь к проекту
 PROJECT_DIR=~/cyber-immune-auth
 
 # 1. Helm репозитории
@@ -11,7 +9,7 @@ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo add gatekeeper https://open-policy-agent.github.io/gatekeeper/charts
 helm repo update
 
-# 2. Сборка образов локально (без eval docker-env)
+# 2. Сборка образов локально
 echo "Сборка Reference Monitor (TCB)..."
 cd $PROJECT_DIR/reference-monitor/refmon
 docker build -t secure-refmon:latest .
