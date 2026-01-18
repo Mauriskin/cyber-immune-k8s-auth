@@ -21,14 +21,14 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// Hardcoded credentials для теста
+// Учетные данные для теста
 const (
 	validUser     = "admin"
 	validPassword = "secret123"
 	validMFA      = "123456"
 )
 
-// Адрес Token Enforcer (прокси к Reference Monitor)
+// Адрес Token Enforcer
 const tokenEndpoint = "http://token-enforcer-svc.domain3-tcb.svc.cluster.local:8080/issue"
 
 // Адрес Security Controller
@@ -47,7 +47,7 @@ func initSecurityClient() {
 	log.Println("Connected to Security Controller")
 }
 
-// Rate limiting (in-memory)
+// Rate limiting
 type RateLimiter struct {
 	mu    sync.Mutex
 	count map[string]int
@@ -77,7 +77,7 @@ func (rl *RateLimiter) Allow(ip string) bool {
 	return true
 }
 
-// getClientIP извлекает реальный IP клиента (учитывает прокси/Ingress)
+// getClientIP извлекает реальный IP клиента (с учетом прокси/Ingress)
 func getClientIP(r *http.Request) string {
 	if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
 		if comma := strings.Index(forwarded, ","); comma != -1 {
@@ -105,14 +105,14 @@ type TokenResponse struct {
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	clientIP := getClientIP(r)
 
-	// 1. Rate limiting
+	// Rate limiting
 	if !limiter.Allow(clientIP) {
 		log.Printf("Rate limit exceeded for IP: %s", clientIP)
 		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 		return
 	}
 
-	// 2. Чтение и парсинг тела
+	// Чтение и парсинг тела
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Cannot read request body", http.StatusBadRequest)
@@ -125,7 +125,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Проверка учётных данных
+	// Проверка учётных данных
 	if req.Username != validUser || req.Password != validPassword || req.MFA != validMFA {
 		log.Printf("Failed login attempt from IP: %s (user: %s)", clientIP, req.Username)
 		http.Error(w, "Invalid credentials or MFA", http.StatusUnauthorized)
@@ -134,7 +134,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Successful authentication for user: %s from IP: %s", req.Username, clientIP)
 
-	// 4. Проверка политики через Security Controller
+	// Проверка политики через Security Controller
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -158,7 +158,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 5. Если политика разрешает — forward к Token Enforcer
+	// Если политика разрешает — forward к Token Enforcer
 	issuePayload := map[string]string{"subject": req.Username}
 	issueBody, _ := json.Marshal(issuePayload)
 
