@@ -14,7 +14,7 @@ spec:
   - http:
       paths:
       - path: /login(/|$)(.*)   # Regex матчит /login, /login/ и /login/anything
-        pathType: ImplementationSpecific   # Обязательно для regex в новых версиях
+        pathType: ImplementationSpecific
         backend:
           service:
             name: auth-service-svc
